@@ -1,0 +1,36 @@
+# Source files (not needed in package)
+mcp-server/main.go
+go.mod
+go.sum
+
+# Development files
+build.js
+*.log
+.DS_Store
+.vscode/
+.idea/
+
+# Git files
+.git/
+.gitignore
+
+# Documentation source
+docs/
+GITHUB_PAGES_SETUP.md
+RELEASE_STATUS.md
+
+# GitHub workflows
+.github/
+
+# Test files
+*.test.js
+test/
+tests/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Environment files
+.env*

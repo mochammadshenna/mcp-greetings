@@ -1,235 +1,71 @@
 package main
 
 import (
-	"bufio"
-	"encoding/json"
-	"fmt"
-	"os"
+	"context"
+	"log"
+
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-type JSONRPCRequest struct {
-	JSONRPC string      `json:"jsonrpc"`
-	ID      int         `json:"id"`
-	Method  string      `json:"method"`
-	Params  interface{} `json:"params,omitempty"`
+// Input represents the tool input parameters
+type Input struct {
+	Name     string `json:"name" jsonschema:"the name of the person to greet"`
+	Language string `json:"language" jsonschema:"the language for greeting (English, Spanish, French, German, Japanese, Chinese, Korean)"`
 }
 
-type JSONRPCResponse struct {
-	JSONRPC string      `json:"jsonrpc"`
-	ID      int         `json:"id"`
-	Result  interface{} `json:"result,omitempty"`
-	Error   interface{} `json:"error,omitempty"`
+// Output represents the tool output
+type Output struct {
+	Greeting string `json:"greeting" jsonschema:"the greeting message"`
 }
 
-type InitializeResult struct {
-	ProtocolVersion string `json:"protocolVersion"`
-	Capabilities    struct {
-		Tools struct{} `json:"tools"`
-	} `json:"capabilities"`
-	ServerInfo struct {
-		Name    string `json:"name"`
-		Version string `json:"version"`
-	} `json:"serverInfo"`
-}
+// SayGreetings handles the greeting tool call
+func SayGreetings(ctx context.Context, req *mcp.CallToolRequest, input Input) (
+	*mcp.CallToolResult,
+	Output,
+	error,
+) {
+	// Default to English if no language specified
+	if input.Language == "" {
+		input.Language = "English"
+	}
 
-type ToolsListResult struct {
-	Tools []struct {
-		Name        string `json:"name"`
-		Description string `json:"description"`
-		InputSchema struct {
-			Type       string `json:"type"`
-			Properties struct {
-				Name struct {
-					Type        string `json:"type"`
-					Description string `json:"description"`
-				} `json:"name"`
-				Language struct {
-					Type        string   `json:"type"`
-					Description string   `json:"description"`
-					Enum        []string `json:"enum"`
-				} `json:"language"`
-			} `json:"properties"`
-			Required []string `json:"required"`
-		} `json:"inputSchema"`
-	} `json:"tools"`
-}
+	// Generate greeting based on language
+	var greeting string
+	switch input.Language {
+	case "Spanish":
+		greeting = "¡Hola, " + input.Name + "!"
+	case "French":
+		greeting = "Bonjour, " + input.Name + "!"
+	case "German":
+		greeting = "Hallo, " + input.Name + "!"
+	case "Japanese":
+		greeting = "こんにちは, " + input.Name + "!"
+	case "Chinese":
+		greeting = "你好, " + input.Name + "!"
+	case "Korean":
+		greeting = "안녕하세요, " + input.Name + "!"
+	default:
+		greeting = "Hello, " + input.Name + "!"
+	}
 
-type ToolCallResult struct {
-	Content []struct {
-		Type string `json:"type"`
-		Text string `json:"text"`
-	} `json:"content"`
+	return nil, Output{Greeting: greeting}, nil
 }
 
 func main() {
-	scanner := bufio.NewScanner(os.Stdin)
+	// Create server with official SDK
+	server := mcp.NewServer(&mcp.Implementation{
+		Name:    "greetings-server",
+		Version: "1.1.0",
+	}, nil)
 
-	for scanner.Scan() {
-		line := scanner.Text()
+	// Add the greetings tool using the official SDK
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "sayGreetings",
+		Description: "Say hello to someone in different languages",
+	}, SayGreetings)
 
-		var req JSONRPCRequest
-		if err := json.Unmarshal([]byte(line), &req); err != nil {
-			continue
-		}
-
-		var response JSONRPCResponse
-		response.JSONRPC = "2.0"
-		response.ID = req.ID
-
-		switch req.Method {
-		case "initialize":
-			response.Result = InitializeResult{
-				ProtocolVersion: "2024-11-05",
-				Capabilities: struct {
-					Tools struct{} `json:"tools"`
-				}{},
-				ServerInfo: struct {
-					Name    string `json:"name"`
-					Version string `json:"version"`
-				}{
-					Name:    "greetings-server",
-					Version: "1.0.0",
-				},
-			}
-
-		case "tools/list":
-			response.Result = ToolsListResult{
-				Tools: []struct {
-					Name        string `json:"name"`
-					Description string `json:"description"`
-					InputSchema struct {
-						Type       string `json:"type"`
-						Properties struct {
-							Name struct {
-								Type        string `json:"type"`
-								Description string `json:"description"`
-							} `json:"name"`
-							Language struct {
-								Type        string   `json:"type"`
-								Description string   `json:"description"`
-								Enum        []string `json:"enum"`
-							} `json:"language"`
-						} `json:"properties"`
-						Required []string `json:"required"`
-					} `json:"inputSchema"`
-				}{
-					{
-						Name:        "sayGreetings",
-						Description: "Say hello to someone in different languages",
-						InputSchema: struct {
-							Type       string `json:"type"`
-							Properties struct {
-								Name struct {
-									Type        string `json:"type"`
-									Description string `json:"description"`
-								} `json:"name"`
-								Language struct {
-									Type        string   `json:"type"`
-									Description string   `json:"description"`
-									Enum        []string `json:"enum"`
-								} `json:"language"`
-							} `json:"properties"`
-							Required []string `json:"required"`
-						}{
-							Type: "object",
-							Properties: struct {
-								Name struct {
-									Type        string `json:"type"`
-									Description string `json:"description"`
-								} `json:"name"`
-								Language struct {
-									Type        string   `json:"type"`
-									Description string   `json:"description"`
-									Enum        []string `json:"enum"`
-								} `json:"language"`
-							}{
-								Name: struct {
-									Type        string `json:"type"`
-									Description string `json:"description"`
-								}{
-									Type:        "string",
-									Description: "Name of the person to greet",
-								},
-								Language: struct {
-									Type        string   `json:"type"`
-									Description string   `json:"description"`
-									Enum        []string `json:"enum"`
-								}{
-									Type:        "string",
-									Description: "Language for greeting (optional, default: English)",
-									Enum:        []string{"English", "Spanish", "French", "German", "Japanese", "Chinese", "Korean"},
-								},
-							},
-							Required: []string{"name"},
-						},
-					},
-				},
-			}
-
-		case "tools/call":
-			// Parse the tool call parameters
-			paramsMap, ok := req.Params.(map[string]interface{})
-			if !ok {
-				response.Error = map[string]string{"message": "Invalid parameters"}
-				break
-			}
-
-			toolName, ok := paramsMap["name"].(string)
-			if !ok || toolName != "sayGreetings" {
-				response.Error = map[string]string{"message": "Unknown tool"}
-				break
-			}
-
-			arguments, ok := paramsMap["arguments"].(map[string]interface{})
-			if !ok {
-				response.Error = map[string]string{"message": "Invalid arguments"}
-				break
-			}
-
-			name, ok := arguments["name"].(string)
-			if !ok {
-				response.Error = map[string]string{"message": "Name is required"}
-				break
-			}
-
-			language, _ := arguments["language"].(string)
-			if language == "" {
-				language = "English"
-			}
-
-			var greeting string
-			switch language {
-			case "Spanish":
-				greeting = "¡Hola, " + name + "!"
-			case "French":
-				greeting = "Bonjour, " + name + "!"
-			case "German":
-				greeting = "Hallo, " + name + "!"
-			case "Japanese":
-				greeting = "こんにちは, " + name + "!"
-			case "Chinese":
-				greeting = "你好, " + name + "!"
-			case "Korean":
-				greeting = "안녕하세요, " + name + "!"
-			default:
-				greeting = "Hello, " + name + "!"
-			}
-
-			response.Result = ToolCallResult{
-				Content: []struct {
-					Type string `json:"type"`
-					Text string `json:"text"`
-				}{
-					{
-						Type: "text",
-						Text: greeting,
-					},
-				},
-			}
-		}
-
-		// Send response
-		responseJSON, _ := json.Marshal(response)
-		fmt.Println(string(responseJSON))
+	// Run the server over stdin/stdout using official transport
+	if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
+		log.Fatal(err)
 	}
 }

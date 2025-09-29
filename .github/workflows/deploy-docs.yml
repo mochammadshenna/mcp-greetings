@@ -27,11 +27,6 @@ jobs:
               run: |
                   npm install -g docsify-cli
 
-            - name: Build documentation
-              run: |
-                  docsify serve docs --port 3000 &
-                  sleep 10
-
             - name: Deploy to GitHub Pages
               if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
               uses: peaceiris/actions-gh-pages@v3

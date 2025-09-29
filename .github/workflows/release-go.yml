@@ -1,0 +1,73 @@
+name: Pure Go Release
+
+on:
+    push:
+        tags:
+            - "v*"
+    workflow_dispatch:
+
+jobs:
+    release:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Setup Go
+              uses: actions/setup-go@v4
+              with:
+                  go-version: "1.21"
+
+            - name: Get version from tag
+              run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
+            - name: Build binaries
+              run: |
+                  ./release.sh $VERSION
+
+            - name: Test binary
+              run: |
+                  chmod +x releases/mcp-greetings-linux-amd64
+                  echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}}}' | timeout 5s ./releases/mcp-greetings-linux-amd64 || true
+
+            - name: Create Release
+              uses: softprops/action-gh-release@v1
+              with:
+                  files: |
+                      releases/*
+                  body: |
+                      ## Pure Go MCP Greetings Server v${{ env.VERSION }}
+
+                      This is a pure Go implementation - no Node.js or npm required!
+
+                      ### Quick Install
+
+                      **Linux/macOS:**
+                      ```bash
+                      curl -L https://github.com/mochammadshenna/mcp-greetings/releases/download/v${{ env.VERSION }}/install.sh | bash
+                      ```
+
+                      **Windows:**
+                      Download and run `install.bat` from the release files.
+
+                      ### Manual Install
+
+                      Download the binary for your platform and add to your MCP configuration:
+
+                      ```json
+                      {
+                        "mcpServers": {
+                          "greetings": {
+                            "command": "/path/to/mcp-greetings"
+                          }
+                        }
+                      }
+                      ```
+
+                      ### Features
+                      - 🌍 7 languages supported
+                      - 🚀 Pure Go implementation
+                      - 📦 Single binary distribution
+                      - 🔧 Cross-platform support
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

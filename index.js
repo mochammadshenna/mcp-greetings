@@ -7,19 +7,9 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Define greetings in different languages
-const greetings = {
-    English: (name) => `Hello, ${name}!`,
-    Spanish: (name) => `¡Hola, ${name}!`,
-    French: (name) => `Bonjour, ${name}!`,
-    German: (name) => `Hallo, ${name}!`,
-    Japanese: (name) => `こんにちは, ${name}!`,
-    Chinese: (name) => `你好, ${name}!`,
-    Korean: (name) => `안녕하세요, ${name}!`,
-};
-
-// Start the Go server
-const goServer = spawn('go', ['run', join(__dirname, 'mcp-server', 'main.go')], {
+// Start the compiled Go binary
+const binaryPath = join(__dirname, 'mcp-greetings' + (process.platform === 'win32' ? '.exe' : ''));
+const goServer = spawn(binaryPath, [], {
     stdio: ['pipe', 'pipe', 'pipe']
 });
 

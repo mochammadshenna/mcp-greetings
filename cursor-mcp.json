@@ -1,9 +1,12 @@
 {
-  "mcpServers": {
-    "greetings-server": {
-      "command": "go",
-      "args": ["run", "mcp-server/main.go"],
-      "cwd": "/Users/msw/Desktop/AI Dev Craft/Sandbox AI Arts/mcp-greetings"
+    "mcpServers": {
+        "greetings-server": {
+            "command": "go",
+            "args": [
+                "run",
+                "mcp-server/main.go"
+            ],
+            "cwd": "/Users/msw/Desktop/AI Dev Craft/Sandbox AI Arts/mcp-greetings"
+        }
     }
-  }
 }
