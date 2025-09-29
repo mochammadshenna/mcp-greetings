@@ -1,0 +1,48 @@
+{
+    "name": "@mochammadshenna/mcp-greetings",
+    "version": "1.0.0",
+    "description": "Multilingual greetings MCP server",
+    "main": "index.js",
+    "bin": {
+        "mcp-greetings": "./index.js"
+    },
+    "type": "module",
+    "scripts": {
+        "start": "node index.js"
+    },
+    "keywords": [
+        "mcp",
+        "model-context-protocol",
+        "greetings",
+        "multilingual",
+        "ai",
+        "claude",
+        "cursor"
+    ],
+    "author": {
+        "name": "Mochammad Shenna",
+        "email": "mochammadshenna@example.com",
+        "url": "https://github.com/mochammadshenna"
+    },
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/mochammadshenna/mcp-greetings.git"
+    },
+    "bugs": {
+        "url": "https://github.com/mochammadshenna/mcp-greetings/issues"
+    },
+    "homepage": "https://github.com/mochammadshenna/mcp-greetings#readme",
+    "dependencies": {},
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "files": [
+        "index.js",
+        "mcp-server/",
+        "go.mod",
+        "go.sum",
+        "README.md",
+        "LICENSE"
+    ]
+}

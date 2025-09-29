@@ -1,0 +1,42 @@
+name: Deploy Documentation to GitHub Pages
+
+on:
+    push:
+        branches:
+            - main
+            - master
+    pull_request:
+        branches:
+            - main
+            - master
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "18"
+
+            - name: Install dependencies
+              run: |
+                  npm install -g docsify-cli
+
+            - name: Build documentation
+              run: |
+                  docsify serve docs --port 3000 &
+                  sleep 10
+
+            - name: Deploy to GitHub Pages
+              if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+              uses: peaceiris/actions-gh-pages@v3
+              with:
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  publish_dir: ./docs
+                  destination_dir: .
+                  enable_jekyll: false
